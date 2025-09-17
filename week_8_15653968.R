@@ -38,4 +38,11 @@ nz_map_pop
 
 
 ######################### Task Four ########################
+# Read the supplied NZ territories geoJSON into an sf object
+geojson_path <- "nz_ta.geojson"
+stopifnot(file.exists(geojson_path))
+nz_sf <- st_read(geojson_path, quiet = TRUE)
+nz_sf <- st_make_valid(nz_sf)
 
+######################### Task Fiver ########################
+ggplot(nz_sf) + geom_sf(color = "grey40", fill = "white", linewidth = 0.2) + theme_void()
