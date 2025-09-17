@@ -5,6 +5,7 @@ library(ggplot2)
 library(dplyr)
 library(readr)
 library(viridis)
+library(stringr)
 
 
 ########################### Task One ######################
@@ -44,5 +45,27 @@ stopifnot(file.exists(geojson_path))
 nz_sf <- st_read(geojson_path, quiet = TRUE)
 nz_sf <- st_make_valid(nz_sf)
 
-######################### Task Fiver ########################
+######################### Task Five ########################
 ggplot(nz_sf) + geom_sf(color = "grey40", fill = "white", linewidth = 0.2) + theme_void()
+
+######################### Task Six ########################
+pop_csv_path <- "nz_territory_2016_population.csv"
+stopifnot(file.exists(pop_csv_path))
+pop_raw <- read_csv(pop_csv_path, show_col_types = FALSE, na = c("", "NA", "N/A"))
+
+pop <- pop_raw %>%
+  rename(
+    territory  = nz_territory,
+    population = `2016_population`
+  ) %>%
+  mutate(
+    territory  = str_squish(territory),
+    population = readr::parse_number(as.character(population))
+  ) %>%
+  filter(!is.na(territory), !is.na(population)) %>%
+  filter(!str_detect(str_to_lower(territory), "total|all|unspecified")) %>%
+  arrange(desc(population))
+
+#Quick check be cause im stressed
+summary(pop$population)
+hist(pop$population, breaks = 20, main = "Population distribution", xlab = "Population")
