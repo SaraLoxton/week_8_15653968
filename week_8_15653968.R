@@ -6,6 +6,7 @@ library(dplyr)
 library(readr)
 library(viridis)
 library(stringr)
+library(scales)
 
 
 ########################### Task One ######################
@@ -60,7 +61,7 @@ pop <- pop_raw %>%
   ) %>%
   mutate(
     territory  = str_squish(territory),
-    population = readr::parse_number(as.character(population))
+    population = parse_number(as.character(population))
   ) %>%
   filter(!is.na(territory), !is.na(population)) %>%
   filter(!str_detect(str_to_lower(territory), "total|all|unspecified")) %>%
@@ -69,3 +70,86 @@ pop <- pop_raw %>%
 #Quick check be cause im stressed
 summary(pop$population)
 hist(pop$population, breaks = 20, main = "Population distribution", xlab = "Population")
+
+pop <- pop %>%
+  filter(
+    !str_detect(
+      str_to_lower(territory),
+      "^new zealand$|^north island$|^south island$|total|overall|combined|unspecified"
+    )
+  )
+
+#checking again
+pop %>% arrange(desc(population)) %>% slice_head(n = 5)
+
+#histogram for the territories only
+ggplot(pop, aes(population)) +
+  geom_histogram(bins = 20) +
+  scale_x_continuous(labels = label_comma()) +
+  labs(title = "Population distribution (territories only)",
+       x = "Population", y = "Count") +
+  theme_minimal()
+
+#log view
+ggplot(pop, aes(population)) +
+  geom_histogram(bins = 20) +
+  scale_x_log10(labels = label_comma()) +
+  labs(title = "Population distribution (log10)",
+       x = "Population (log10)", y = "Count") +
+  theme_minimal()
+
+######################### Task Seven ########################
+# All the joining stuff for task seven from task six
+pop_clean <- pop %>%
+  mutate(name_clean = territory %>%
+           str_to_lower() %>% 
+           str_squish() %>%
+           str_replace_all(regex(" district| city| region| territorial authority| council",
+                                 ignore_case = TRUE), ""))
+
+name_col <- names(nz_sf)[stringr::str_detect(names(nz_sf), 
+                                             "(NAME|Name|TA|REG)")] %>% 
+  purrr::pluck(1)
+
+nz_sf_clean <- nz_sf %>%
+  mutate(name_clean = get(name_col) %>%
+           str_to_lower() %>% 
+           str_squish() %>%
+           str_replace_all(regex(" district| city| region| territorial authority| council",
+                                 ignore_case = TRUE), ""))
+
+nz_joined <- dplyr::left_join(nz_sf_clean, pop_clean, by = "name_clean")
+
+name_col <- if ("TA2016_NAM" %in% names(nz_sf)) "TA2016_NAM" else {
+  names(nz_sf)[stringr::str_detect(names(nz_sf), "(?i)name|ta.*name|territ|region")][1]
+}
+
+norm_name <- function(x) {
+  x |>
+    str_to_lower() |>
+    str_squish() |>
+    str_replace_all(
+      regex(" territorial authority| district council| city council| regional council| district| city| region| council",
+            ignore_case = TRUE),
+      ""
+    ) |>
+    str_replace_all("[^a-z ]", "")
+}
+
+pop_keyed <- pop %>%
+  transmute(name_clean = norm_name(territory),
+            population  = population)
+
+nz_joined <- nz_sf %>%
+  mutate(name_clean = norm_name(.data[[name_col]])) %>%
+  left_join(pop_keyed, by = "name_clean")
+
+#Im stressed again and checking
+missing <- nz_joined %>% filter(is.na(population)) %>% distinct(.data[[name_col]]) %>% pull()
+if (length(missing)) message("Unmatched in geojson: ", paste(missing, collapse = ", "))
+
+
+
+
+
+
