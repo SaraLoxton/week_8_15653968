@@ -163,3 +163,37 @@ p_basic <- ggplot(nz_joined) +
 p_basic
 
 
+######################### Task Nine ########################
+#if 8 doesnt run because population doesnt exist that would mess up before task 9
+
+p_jazzy <- ggplot(nz_joined) +
+  geom_sf(aes(fill = population), color = "white", linewidth = 0.2) +
+  theme_void() +
+  scale_fill_viridis_c(
+    trans   = "log10",               # handle long tail
+    labels  = scales::label_comma(), # pretty numbers
+    option  = "C",
+    na.value = "grey90",
+    name    = "Population (log scale)"
+  ) +
+  labs(
+    title    = "Population by NZ Territorial Authority",
+    subtitle = "Log-scaled choropleth to account for skewed population counts",
+    caption  = "Boundaries: Stats NZ | Population: provided CSV"
+  ) +
+  theme(
+    text = element_text(family = "sans", size = 12),
+    plot.title = element_text(face = "bold", size = 16),
+    plot.subtitle = element_text(color = "grey25"),
+    plot.caption = element_text(color = "grey40"),
+    legend.position = "right",
+    legend.title = element_text(face = "bold"),
+    legend.background = element_rect(fill = "white", color = NA),
+    plot.background = element_rect(fill = "white", color = NA),
+    panel.background = element_rect(fill = "white", color = NA)
+  )
+
+p_jazzy
+
+# Save as PNG (meets the lab requirement)
+ggsave("nz_population_choropleth.png", p_jazzy, width = 9, height = 7, dpi = 300)
