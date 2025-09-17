@@ -149,7 +149,17 @@ missing <- nz_joined %>% filter(is.na(population)) %>% distinct(.data[[name_col]
 if (length(missing)) message("Unmatched in geojson: ", paste(missing, collapse = ", "))
 
 
+######################### Task Eight ########################
+stopifnot("population" %in% names(nz_joined))
 
+p_basic <- ggplot(nz_joined) +
+  geom_sf(aes(fill = population), color = "white", linewidth = 0.2) +
+  theme_void() +
+  labs(
+    title = "NZ Territories — Population (raw)",
+    fill  = "Population"
+  )
 
+p_basic
 
 
