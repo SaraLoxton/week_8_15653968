@@ -70,6 +70,7 @@ nz_sf <- st_make_valid(nz_sf)
 
 ## Task Five:
 ```{r}
+# making the plot for the territories
 ggplot(nz_sf) + geom_sf(color = "grey40", fill = "white", linewidth = 0.2) + theme_void()
 ```
 
@@ -77,10 +78,12 @@ ggplot(nz_sf) + geom_sf(color = "grey40", fill = "white", linewidth = 0.2) + the
 
 ## Task Six:
 ```{r}
+#Colelcting the data from the csv
 pop_csv_path <- "nz_territory_2016_population.csv"
 stopifnot(file.exists(pop_csv_path))
 pop_raw <- read_csv(pop_csv_path, show_col_types = FALSE, na = c("", "NA", "N/A"))
 
+#Cleaning the data
 pop <- pop_raw %>%
   rename(
     territory  = nz_territory,
@@ -106,7 +109,7 @@ pop <- pop %>%
     )
   )
 
-#checking again
+#checking again because im stressed again
 pop %>% arrange(desc(population)) %>% slice_head(n = 5)
 
 #histogram for the territories only
@@ -175,15 +178,15 @@ nz_joined <- nz_sf %>%
   mutate(name_clean = norm_name(.data[[name_col]])) %>%
   left_join(pop_keyed, by = "name_clean")
 
-#Im stressed again and checking
+#Im stressed again and checking, this comes up on the side enviroment menu
 missing <- nz_joined %>% filter(is.na(population)) %>% distinct(.data[[name_col]]) %>% pull()
-if (length(missing)) message("Unmatched in geojson: ", paste(missing, collapse = ", "))
 ```
 
 <br>
 
 ## Task Eight:
 ```{r}
+# choropleth map with non-transformed population count
 stopifnot("population" %in% names(nz_joined))
 
 p_basic <- ggplot(nz_joined) +
@@ -194,6 +197,7 @@ p_basic <- ggplot(nz_joined) +
     fill  = "Population"
   )
 
+#it has been jazzed up!
 p_basic
 ```
 
@@ -208,7 +212,7 @@ p_jazzy <- ggplot(nz_joined) +
   theme_void() +
   scale_fill_viridis_c(
     trans   = "log10",               # handle long tail
-    labels  = scales::label_comma(), # pretty numbers
+    labels  = scales::label_comma(), # pretty numbers, boom
     option  = "C",
     na.value = "grey90",
     name    = "Population (log scale)"
@@ -230,6 +234,7 @@ p_jazzy <- ggplot(nz_joined) +
     panel.background = element_rect(fill = "white", color = NA)
   )
 
+#dont worry this also has been jazzed up
 p_jazzy
 ```
 
